@@ -30,6 +30,7 @@ public class ImpressionistView extends View {
     private Bitmap _offScreenBitmap = null;
     private Paint _paint = new Paint();
 
+    private float oldX, oldY, startTime;
     private int _alpha = 150;
     private int _defaultRadius = 25;
     private Point _lastPoint = null;
@@ -119,6 +120,7 @@ public class ImpressionistView extends View {
             paint.setStyle(Paint.Style.FILL);
             _offScreenCanvas.drawRect(0, 0, this.getWidth(), this.getHeight(), paint);
         }
+        invalidate();
     }
 
     @Override
@@ -144,50 +146,71 @@ public class ImpressionistView extends View {
         float curTouchY = motionEvent.getY();
         int curTouchXRounded = (int) curTouchX;
         int curTouchYRounded = (int) curTouchY;
-        try {
-            Bitmap imageViewBitmap = _imageView.getDrawingCache();
-            int color = imageViewBitmap.getPixel(curTouchXRounded, curTouchYRounded);
-            _paint.setColor(color);
-        }
-        catch (Exception e) {
-            Log.d("", "onTouchEvent: " + e.getMessage());
-            return false;
-        }
-        if (_brushType == BrushType.Square) {
-            _offScreenCanvas.drawRect(curTouchX, curTouchY, curTouchX + 30, curTouchY + 30, _paint);
-        }
-        else {
-            _offScreenCanvas.drawPoint(curTouchX, curTouchY, _paint);
-        }
-        invalidate();
-        return true;
         switch(motionEvent.getAction()){
             case MotionEvent.ACTION_DOWN:
+                oldX = motionEvent.getX();
+                oldY = motionEvent.getY();
+                startTime = motionEvent.getEventTime();
+                System.out.println("DOWN");
             case MotionEvent.ACTION_MOVE:
+                double distance = Math.sqrt(((curTouchX-oldX) * (curTouchX-oldX)) + ((curTouchY-oldY) * (curTouchY-oldY)));
+                float endTime = motionEvent.getEventTime();
+                float velocity =(float) distance / (endTime - startTime);
+                System.out.println("Velocity: " + velocity);
 
-                // For efficiency, motion events with ACTION_MOVE may batch together multiple movement samples within a single object.
-                // The most current pointer coordinates are available using getX(int) and getY(int).
-                // Earlier coordinates within the batch are accessed using getHistoricalX(int, int) and getHistoricalY(int, int).
-                // See: http://developer.android.com/reference/android/view/MotionEvent.html
                 int historySize = motionEvent.getHistorySize();
                 for (int i = 0; i < historySize; i++) {
 
                     float touchX = motionEvent.getHistoricalX(i);
                     float touchY = motionEvent.getHistoricalY(i);
 
-                    // TODO: draw to the offscreen bitmap for historical x,y points
-                    // Insert one line of code here
-                    _offScreenBitmap.setPixel((int)touchX, (int)touchY, _paint.getColor());
+                    try {
+                        Bitmap imageViewBitmap = _imageView.getDrawingCache();
+                        int color = imageViewBitmap.getPixel((int) touchX, (int) touchY);
+                        _paint.setColor(color);
+                        _paint.setAlpha(_alpha);
+                    }
+                    catch (Exception e) {
+                        Log.d("", "onTouchEvent: " + e.getMessage());
+                        return false;
+                    }
+                    if (_brushType == BrushType.Square) {
+                        float radius = ((95 / 6) * velocity) + _minBrushRadius;
+                        _offScreenCanvas.drawRect(touchX, touchY, touchX + radius, touchY + radius, _paint);
+                    }
+                    else if(_brushType == BrushType.Circle) {
+                        float radius = ((95 / 6) * velocity) + _minBrushRadius;
+                        _offScreenCanvas.drawCircle(touchX, touchY, radius, _paint);
+                    }
+                    else {
+                        _offScreenCanvas.drawPoint(touchX, touchY, _paint);
+                    }
                 }
-
-                // TODO: draw to the offscreen bitmap for current x,y point.
-                // Insert one line of code here
-                _offScreenBitmap.setPixel((int)curTouchX, (int)curTouchY, _paint.getColor());
-
+                try {
+                    Bitmap imageViewBitmap = _imageView.getDrawingCache();
+                    int color = imageViewBitmap.getPixel(curTouchXRounded, curTouchYRounded);
+                    _paint.setColor(color);
+                    _paint.setAlpha(_alpha);
+                }
+                catch (Exception e) {
+                    Log.d("", "onTouchEvent: " + e.getMessage());
+                    return false;
+                }
+                if (_brushType == BrushType.Square) {
+                    float radius = ((95 / 6) * velocity) + _minBrushRadius;
+                    _offScreenCanvas.drawRect(curTouchX, curTouchY, curTouchX + radius, curTouchY + radius, _paint);
+                }
+                else if(_brushType == BrushType.Circle) {
+                    float radius = ((95 / 6) * velocity) + _minBrushRadius;
+                    _offScreenCanvas.drawCircle(curTouchX, curTouchY, radius, _paint);
+                }
+                else {
+                    _offScreenCanvas.drawPoint(curTouchX, curTouchY, _paint);
+                }
+                oldX = curTouchX;
+                oldY = curTouchY;
+                startTime = motionEvent.getEventTime();
                 invalidate();
-
-                long endTime = SystemClock.elapsedRealtime();
-                _elapsedTimeProcessingTouchEventsInMs += endTime - startTime;
                 break;
             case MotionEvent.ACTION_UP:
                 break;
