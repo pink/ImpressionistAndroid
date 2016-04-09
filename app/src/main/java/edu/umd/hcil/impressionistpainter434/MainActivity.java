@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -16,10 +18,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.URLUtil;
 import android.widget.ActionMenuView;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.Toast;
+
+import com.michaldrabik.tapbarmenulib.TapBarMenu;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -58,11 +63,64 @@ public class MainActivity extends AppCompatActivity implements OnMenuItemClickLi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         _impressionistView = (ImpressionistView)findViewById(R.id.viewImpressionist);
         ImageView imageView = (ImageView)findViewById(R.id.viewImage);
         _impressionistView.setImageView(imageView);
+        final TapBarMenu tapBarMenu = (TapBarMenu)findViewById(R.id.tapBarMenu);
+        tapBarMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tapBarMenu.toggle();
+            }
+        });
 
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.downloadImages:
+                onButtonClickDownloadImages(new View(getApplicationContext()));
+                return true;
+            case R.id.saveImage:
+                onButtonClickSave(new View(getApplicationContext()));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void onButtonClickText(View v) {
+        final EditText textField = new EditText(this);
+        new AlertDialog.Builder(this)
+                .setTitle("Enter text:")
+                .setView(textField)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        Toast.makeText(MainActivity.this, "Text added", Toast.LENGTH_SHORT).show();
+                        _impressionistView.paintText(textField.getText().toString());
+                    }})
+                .setNegativeButton(android.R.string.no, null).show();
+    }
+
+    public void onButtonClickSave(View v) {
+        final EditText input = new EditText(this);
+        new AlertDialog.Builder(this)
+                .setTitle("File Name:")
+                .setView(input)
+                .setIcon(android.R.drawable.ic_menu_save)
+                .setPositiveButton("SAVE", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        Toast.makeText(MainActivity.this, "Painting saved", Toast.LENGTH_SHORT).show();
+                        String result = input.getText().toString();
+                        _impressionistView.savePainting(result);
+                    }})
+                .setNegativeButton(android.R.string.no, null).show();
     }
 
     public void onButtonClickClear(View v) {
@@ -95,17 +153,9 @@ public class MainActivity extends AppCompatActivity implements OnMenuItemClickLi
                 Toast.makeText(this, "Square Brush", Toast.LENGTH_SHORT).show();
                 _impressionistView.setBrushType(BrushType.Square);
                 return true;
-            case R.id.menuLine:
-                Toast.makeText(this, "Line Brush", Toast.LENGTH_SHORT).show();
-                _impressionistView.setBrushType(BrushType.Line);
-                return true;
             case R.id.menuCircleSplatter:
                 Toast.makeText(this, "Circle Splatter Brush", Toast.LENGTH_SHORT).show();
                 _impressionistView.setBrushType(BrushType.CircleSplatter);
-                return true;
-            case R.id.menuLineSplatter:
-                Toast.makeText(this, "Line Splatter Brush", Toast.LENGTH_SHORT).show();
-                _impressionistView.setBrushType(BrushType.LineSplatter);
                 return true;
         }
         return false;

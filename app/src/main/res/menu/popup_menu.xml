@@ -8,14 +8,8 @@
     <item android:id="@+id/menuSquare"
         android:title="Square" />
 
-    <item android:id="@+id/menuLine"
-        android:title="Line" />
-
     <item android:id="@+id/menuCircleSplatter"
         android:title="Circle Splatter" />
-
-    <item android:id="@+id/menuLineSplatter"
-        android:title="Line Splatter" />
 
 
 

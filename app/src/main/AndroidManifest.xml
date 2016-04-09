@@ -5,6 +5,7 @@
     <!-- This is necessary to save data to external storage, see: http://developer.android.com/training/basics/data-storage/files.html -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA"/>
 
     <!-- This is necessary to download images from internet -->
     <uses-permission android:name="android.permission.INTERNET" />
