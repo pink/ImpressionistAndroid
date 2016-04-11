@@ -1,5 +1,5 @@
 # CMSC434 Impressionist Painting Prototype
-
+![alt tag](http://i.imgur.com/O51Dg7G.png)
 ## Getting Started
  - Clone repo
  - "New -> Import Project -> '../ImpressionistAndroid'" in Android Studio
